@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#8B5CF6">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Counter">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icon-192.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <title>Counter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(180deg, #8B5CF6 0%, #6D28D9 50%, #C084FC 100%);
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            height: -webkit-fill-available;
+            touch-action: manipulation;
+        }
+        
+        html {
+            height: -webkit-fill-available;
+        }
+
+        .reset-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .reset-button:active {
+            transform: scale(0.9);
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .reset-icon {
+            width: 24px;
+            height: 24px;
+            color: white;
+        }
+
+        .counter-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .counter {
+            font-size: 35vh;
+            font-weight: 100;
+            color: white;
+            letter-spacing: -0.05em;
+            text-shadow: 0 2px 30px rgba(0, 0, 0, 0.2);
+            transition: font-size 0.2s ease;
+            font-feature-settings: "tnum";
+            -webkit-font-smoothing: antialiased;
+            line-height: 1;
+        }
+        
+        .counter.medium {
+            font-size: 25vh;
+        }
+        
+        .counter.large {
+            font-size: 18vh;
+        }
+        
+        .counter.extra-large {
+            font-size: 14vh;
+        }
+
+        /* Ripple effect */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(0);
+            animation: ripple-animation 0.6s ease-out;
+            pointer-events: none;
+        }
+
+        @keyframes ripple-animation {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="reset-button" id="resetBtn" aria-label="Reset counter">
+        <svg class="reset-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+            <path d="M21 3v5h-5"></path>
+            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+            <path d="M3 21v-5h5"></path>
+        </svg>
+    </button>
+
+    <div class="counter-container" id="counterContainer">
+        <div class="counter" id="counter">0</div>
+    </div>
+
+    <script>
+        let count = 0;
+        const counter = document.getElementById('counter');
+        const counterContainer = document.getElementById('counterContainer');
+        const resetBtn = document.getElementById('resetBtn');
+
+        // Load saved count
+        const savedCount = localStorage.getItem('counterValue');
+        if (savedCount !== null) {
+            count = parseInt(savedCount);
+            counter.textContent = count;
+        }
+
+        // Increment counter on tap
+        counterContainer.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            count++;
+            counter.textContent = count;
+            localStorage.setItem('counterValue', count);
+            
+            // Adjust font size based on digit count
+            updateFontSize();
+        });
+        
+        // Also support mouse clicks for desktop testing
+        counterContainer.addEventListener('mousedown', (e) => {
+            count++;
+            counter.textContent = count;
+            localStorage.setItem('counterValue', count);
+            
+            // Adjust font size based on digit count
+            updateFontSize();
+        });
+
+        // Reset counter
+        resetBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            count = 0;
+            counter.textContent = count;
+            localStorage.setItem('counterValue', count);
+            updateFontSize();
+        });
+        
+        resetBtn.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+            count = 0;
+            counter.textContent = count;
+            localStorage.setItem('counterValue', count);
+            updateFontSize();
+        });
+        
+        // Update font size based on digit count
+        function updateFontSize() {
+            const digitCount = count.toString().length;
+            counter.classList.remove('medium', 'large', 'extra-large');
+            
+            if (digitCount >= 6) {
+                counter.classList.add('extra-large');
+            } else if (digitCount >= 4) {
+                counter.classList.add('large');
+            } else if (digitCount >= 3) {
+                counter.classList.add('medium');
+            }
+        }
+        
+        // Initialize font size on load
+        updateFontSize();
+        
+        // Register service worker for PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(() => {
+                // Service worker registration failed, app will still work
+            });
+        }
+    </script>
+</body>
+</html>
